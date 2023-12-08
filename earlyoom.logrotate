@@ -1,0 +1,5 @@
+/var/log/earlyoom.log
+{
+    create 0644 root root
+    copytruncate
+}

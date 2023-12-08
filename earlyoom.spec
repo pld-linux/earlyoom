@@ -1,13 +1,14 @@
 Summary:	Early OOM Daemon for Linux
 Name:		earlyoom
 Version:	1.7
-Release:	1
+Release:	2
 License:	MIT
 URL:		https://github.com/rfjakob/earlyoom
 Source0:	https://github.com/rfjakob/earlyoom/archive/v%{version}/%{name}-%{version}.tar.gz
 # Source0-md5:	9c567930c60b2ccdc536951b005d413d
 Source1:	%{name}.conf
 Source2:	%{name}.init
+Source3:	%{name}.logrotate
 BuildRequires:	pandoc
 Requires(post,preun):	/sbin/chkconfig
 Requires:	systemd-units
@@ -38,7 +39,7 @@ sed -i -e 's#/default/#/sysconfig/#g' Makefile earlyoom.service.in
 %install
 rm -rf $RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT/etc/rc.d/init.d
+install -d $RPM_BUILD_ROOT/etc/{logrotate.d,rc.d/init.d}
 
 %{__make} install \
 	PREFIX=%{_prefix} \
@@ -48,6 +49,7 @@ install -d $RPM_BUILD_ROOT/etc/rc.d/init.d
 	DESTDIR=$RPM_BUILD_ROOT
 
 cp -a %{SOURCE2} $RPM_BUILD_ROOT/etc/rc.d/init.d/%{name}
+cp -a %{SOURCE3} $RPM_BUILD_ROOT/etc/logrotate.d/%{name}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -71,6 +73,7 @@ fi
 %defattr(644,root,root,755)
 %doc README.md
 %attr(754,root,root) /etc/rc.d/init.d/%{name}
+%config(noreplace) %verify(not md5 mtime size) /etc/logrotate.d/%{name}
 %attr(755,root,root) %{_bindir}/%{name}
 %{systemdunitdir}/%{name}.service
 %{_mandir}/man1/%{name}.*
