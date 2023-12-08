@@ -1,0 +1,86 @@
+#!/bin/sh
+#
+# earlyoom	earlyoom Early OOM Killer
+#
+# chkconfig:	2345 10 90
+#
+# description:	earlyoom A userspace service that will kill the largest process (by VmRSS residential size) when free RAM drops below 10%.
+#
+# processname:	earlyoom
+# config:       /etc/sysconfig/earlyoom
+# pidfile:      /var/run/earlyoom.pid
+#
+
+# Source function library
+. /etc/rc.d/init.d/functions
+
+# Get service config - may override defaults
+[ -f /etc/sysconfig/earlyoom ] && . /etc/sysconfig/earlyoom
+
+pidfile="/var/run/earlyoom.pid"
+
+start() {
+	# Check if the service is already running?
+	if [ -f /var/lock/subsys/earlyoom ]; then
+		msg_already_running "earlyoom"
+		return
+	fi
+
+	msg_starting "earlyoom"
+	daemon --fork --makepid /usr/bin/earlyoom $EARLYOOM_ARGS
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/earlyoom
+}
+
+stop() {
+	if [ ! -f /var/lock/subsys/earlyoom ]; then
+		msg_not_running "earlyoom"
+		return
+	fi
+
+	# Stop daemons.
+	msg_stopping "earlyoom"
+	killproc earlyoom
+	rm -f /var/lock/subsys/earlyoom
+}
+
+condrestart() {
+	if [ ! -f /var/lock/subsys/earlyoom ]; then
+		msg_not_running "earlyoom"
+		RETVAL=$1
+		return
+	fi
+
+	stop
+	start
+}
+
+RETVAL=0
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart)
+	stop
+	start
+	;;
+  try-restart)
+	condrestart 0
+	;;
+  force-reload)
+	condrestart 7
+	;;
+  status)
+	status earlyoom
+	RETVAL=$?
+	;;
+  *)
+	msg_usage "$0 {start|stop|restart|try-restart|force-reload|status}"
+	exit 3
+esac
+
+exit $RETVAL
