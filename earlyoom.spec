@@ -40,6 +40,7 @@ sed -i -e 's#/default/#/sysconfig/#g' Makefile earlyoom.service.in
 rm -rf $RPM_BUILD_ROOT
 
 install -d $RPM_BUILD_ROOT/etc/{logrotate.d,rc.d/init.d}
+install -d $RPM_BUILD_ROOT/var/log
 
 %{__make} install \
 	PREFIX=%{_prefix} \
@@ -50,6 +51,8 @@ install -d $RPM_BUILD_ROOT/etc/{logrotate.d,rc.d/init.d}
 
 cp -a %{SOURCE2} $RPM_BUILD_ROOT/etc/rc.d/init.d/%{name}
 cp -a %{SOURCE3} $RPM_BUILD_ROOT/etc/logrotate.d/%{name}
+
+:> $RPM_BUILD_ROOT/var/log/%{name}.log
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -78,4 +81,5 @@ fi
 %{systemdunitdir}/%{name}.service
 %{_mandir}/man1/%{name}.*
 %attr(640,root,root) %config(noreplace) %verify(not md5 mtime size) /etc/sysconfig/%{name}
+%ghost %{_var}/log/%{name}.log
 
